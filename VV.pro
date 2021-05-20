@@ -14,10 +14,28 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-SOURCES += \
-        main.cpp
-
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+HEADERS += \
+        discovery.h \
+        gsoap/onvif/core/onvifdiscovery/onvifdiscoveryH.h \
+        gsoap/onvif/core/onvifdiscovery/onvifdiscoveryStub.h \
+        gsoap/onvif/core/onvifdiscovery/onvifdiscoverywsddService.h \
+        gsoap/onvif/core/onvifdiscovery/plugin/stdsoap2.h \
+        gsoap/onvif/core/onvifdiscovery/plugin/threads.h \
+        gsoap/onvif/core/onvifdiscovery/plugin/wsaapi.h \
+        gsoap/onvif/core/onvifdiscovery/plugin/wsddapi.h \
+        gsoap/onvif/core/onvifdiscovery/wsdd.nsmap
+
+SOURCES += \
+        discovery.cpp \
+        gsoap/onvif/core/onvifdiscovery/onvifdiscoveryC.cpp \
+        gsoap/onvif/core/onvifdiscovery/onvifdiscoverywsddService.cpp \
+        gsoap/onvif/core/onvifdiscovery/plugin/stdsoap2.cpp \
+        gsoap/onvif/core/onvifdiscovery/plugin/threads.cpp \
+        gsoap/onvif/core/onvifdiscovery/plugin/wsaapi.cpp \
+        gsoap/onvif/core/onvifdiscovery/plugin/wsddapi.cpp \
+        main.cpp

@@ -1,6 +1,6 @@
 #Vincent create
-/Debug
-/Release
+/debug
+/release
 
 # Qt create
 # This file is used to ignore files which are generated

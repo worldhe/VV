@@ -2,19 +2,153 @@
 #include "gsoap/onvif/core/onvifdiscovery/plugin/wsddapi.h"
 #include "gsoap/onvif/core/onvifdiscovery/onvifdiscoverywsddService.h"
 #include "gsoap/onvif/core/onvifdiscovery/wsdd.nsmap"
+
+//组播地址
+#define ADDR "239.255.255.250"
+//组播端口
+#define PORT 3702
+
 Discovery::Discovery()
+    :p_soap(nullptr)
+    ,p_uuid(nullptr)
+    ,c_addr(ADDR)
+    ,i_port(PORT)
+    ,_t(0)
+    ,b_threadFlag(true)
 {
 
 }
 
 Discovery::~Discovery()
 {
+    if (this->p_uuid != nullptr)
+    {
+        delete this->p_uuid;
+    }
 
+    if (this->p_soap != nullptr)
+    {
+        soap_destroy(this->p_soap);
+        soap_end(this->p_soap);
+        soap_free(this->p_soap);
+        delete this->p_soap;
+        this->p_soap = nullptr;
+    }
 }
 
-void Discovery::Demo()
+void Discovery::Init()
 {
+    this->p_soap = soap_new1(SOAP_IO_UDP);
+    this->p_uuid = (char*)soap_wsa_rand_uuid(this->p_soap);
+}
 
+void Discovery::Start()
+{
+    this->SetThreadFlag(true);
+    int ret = pthread_create(&this->_t, nullptr, DiscoveryThread, this);
+    if (ret)
+    {
+        printf("Failed to create discovery thread. errno = %d : %s\n", errno, strerror(errno));
+    }
+}
+
+void Discovery::Stop()
+{
+    this->SetThreadFlag(false);
+}
+
+void* DiscoveryThread(void *param)
+{
+    pthread_detach(pthread_self());
+    Discovery *discovery = (Discovery *)param;
+    struct soap* soap = discovery->GetSOAP();
+    int port = discovery->GetPort();
+    char addr[16];
+    discovery->GetAddr(addr, sizeof (addr));
+    if (soap == nullptr || strlen(addr) == 0)
+        goto RETURN;
+
+    //reuse address
+    soap->bind_flags = SO_REUSEADDR;
+
+    //bind
+    if (!soap_valid_socket(soap_bind(soap, NULL, port, 100)))
+    {
+        soap_print_fault(soap, stderr);
+        printf("Failed to bind port.\n");
+        goto RETURN;
+    }
+
+    //optionally join a multicast group
+    struct ip_mreq mreq;
+    mreq.imr_multiaddr.s_addr = inet_addr(addr);
+    mreq.imr_interface.s_addr = htonl(INADDR_ANY);
+    if (setsockopt(soap->socket, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq)))
+    {
+        printf("Failed to set socket options. errno = %d:%s\n", errno, strerror(errno));
+        goto RETURN;
+    }
+
+    while(discovery->GetThreadFlag())
+    {
+        printf("ONVIF discovery is listening. %s:%d\n", addr, port);
+        //listen
+        int ret = soap_wsdd_listen(soap, 1); // listen for messages for 1 s
+        if (ret)
+        {
+            soap_print_fault(soap, stderr);
+            printf("Failed to listen.\n");
+            goto RETURN;
+        }
+    }
+
+RETURN:
+    pthread_exit(nullptr);
+}
+
+void Discovery::GetUUID(char* uuid, short num)
+{
+    //标准uuid是45个字符组成
+    if (this->p_uuid == nullptr || num < 46)
+    {
+        printf("Failed to obtain UUID.\n");
+        return;
+    }
+    memset(uuid, '\0', num);
+    strncpy(uuid, this->p_uuid, strlen(this->p_uuid));
+}
+
+void Discovery::GetAddr(char *addr, short num)
+{
+    //标准addr是15字符组成
+    if (num < 16)
+    {
+        printf("1.2\n");
+        printf("Failed to obtain addr.\n");
+        return;
+    }
+    memset(addr, '\0', num);
+    strncpy(addr, this->c_addr, strlen(this->c_addr));
+}
+
+int Discovery::GetPort()
+{
+    return this->i_port;
+}
+
+bool Discovery::GetThreadFlag()
+{
+    return this->b_threadFlag;
+}
+
+void Discovery::SetThreadFlag(bool flag)
+{
+    this->b_threadFlag = flag;
+}
+
+struct soap* Discovery::GetSOAP()
+{
+    return this->p_soap;
 }
 
 //onvifdiscoverywsddService.h

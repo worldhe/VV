@@ -4,17 +4,16 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
     printf("Hello world!\n");
-
-    Discovery dis;
-    dis.Init();
+    Discovery* dis = Discovery::GetDiscoveryInstance();
+    dis->Init();
 
     while(true)
     {
-        dis.Start();
+        dis->Start();
 
-        sleep(5);
+        sleep(10);
 
-        dis.Stop();
+        dis->Stop();
 
         sleep(5);
     }

@@ -59,6 +59,10 @@ void wsddService::wsddService_init(soap_mode imode, soap_mode omode)
         { "xsd", "http://www.w3.org/2001/XMLSchema", "http://www.w3.org/*/XMLSchema", NULL },
         { "wsa", "http://schemas.xmlsoap.org/ws/2004/08/addressing", "http://www.w3.org/2005/08/addressing", NULL },
         { "wsdd", "http://schemas.xmlsoap.org/ws/2005/04/discovery", NULL, NULL },
+
+        //Added by Vincent on 2021.05.24.
+        { "tdn", "http://www.onvif.org/ver10/network/wsdl", NULL, NULL},
+
         { NULL, NULL, NULL, NULL}
     };
 	soap_set_namespaces(this->soap, namespaces);

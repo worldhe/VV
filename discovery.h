@@ -8,7 +8,8 @@ void* DiscoveryThread(void *param);
 class Discovery
 {
 public:
-    Discovery();
+    //Discovery();
+    static Discovery* GetDiscoveryInstance();
     ~Discovery();
     void Init();
     void Start();
@@ -19,15 +20,25 @@ public:
     int  GetPort();
     bool GetThreadFlag();
     void SetThreadFlag(bool flag);
+    void SendHello();
+    void SendBye();
 
 private:
-    struct soap* p_soap;
-    char* p_uuid;
-    char c_addr[16];
-    int i_port;
+    Discovery();
+    static Discovery* s_pDiscovery;
+    struct soap* m_pSoap;
+
+public:
+    static char s_aUUID[46];
+    static char s_aServiceAddress[16];
+    static short s_nServicePort;
+    static char s_aXaddrs[64];
+    static char s_aTypes[28];
+    static char s_aScopes[512];
 
     pthread_t _t;
-    bool b_threadFlag;
+    bool m_bThreadFlag;
+
 };
 
 #endif // DISCOVERY_H

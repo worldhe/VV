@@ -104,6 +104,16 @@ void Discovery::Stop()
 
     //发送Bye消息
     this->SendBye();
+
+    //退出组播
+    struct ip_mreq mreq;
+    mreq.imr_multiaddr.s_addr = inet_addr(MULTICAST_ADDRESS);
+    mreq.imr_interface.s_addr = htonl(INADDR_ANY);
+    if (setsockopt(this->m_pSoap->socket, IPPROTO_IP, IP_DROP_MEMBERSHIP, &mreq, sizeof(mreq)))
+    {
+        printf("Failed to set socket options. errno = %d:%s\n", errno, strerror(errno));
+    }
+
 }
 
 void* DiscoveryThread(void *param)
